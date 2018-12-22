@@ -1,0 +1,24 @@
+# Cloudflare DNS updates by Arcanum
+
+:local DNSipAddress ([:resolve "example.example.com"])
+
+
+# Get the current public IP
+/tool fetch url="http://api.ipify.org/" mode=http dst-path=mypublicip.txt
+
+# Read the current public IP into the currentIP variable.
+:local currentIP [/file get mypublicip.txt contents]
+
+:if ($currentIP != $DNSipAddress) do={
+	:log info "DNSipAddress: $DNSipAddress"
+	:log info "Fetching current IP"
+	:log info "Fetched current IP as $currentIP"
+    :log info "CFDDNS: Update needed DNS IP $DNSipAddress and current IP $currentIP"
+    
+	# The update URL. Note the "\3F" is hex for question mark (?). Required since ? is a special character in commands.
+        :log info "CFDDNS: Sending update for home"
+        /tool fetch mode=https url="https://example.com/ddns.php\3Fip=$currentIP&auth_token=tokenhere"  http-method=get
+        :log info "CFDDNS: Host home updated on CF with IP $currentIP"
+}  else={
+    :log info "CFDDNS: DNS IP $DNSipAddress and current IP $currentIP equal, no update needed"
+}
